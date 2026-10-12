@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Budget Planner</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#eff6ff;color:#17345e;line-height:1.5}
+header{background:linear-gradient(135deg,#1769aa,#53c9e9);color:white;text-align:center;padding:30px 16px}
+header h1{margin:0;font-size:clamp(26px,5vw,38px)}
+main{max-width:900px;margin:24px auto;padding:0 14px 35px}
+.card{background:white;border-radius:18px;padding:22px;margin-bottom:20px;box-shadow:0 5px 20px #17345e12}
+h2{color:#1769aa;margin-top:0}
+label{display:block;font-weight:bold;margin:12px 0 5px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font:inherit}
+textarea{min-height:100px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.budgets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.budget{background:#eff6ff;border-radius:13px;padding:14px;border-top:5px solid #2563eb}
+.budget.needs{border-color:#dc2626}.budget.savings{border-color:#16a34a}
+.amount{font-size:22px;font-weight:bold;overflow-wrap:anywhere}
+.small{color:#64748b;font-size:14px}
+.status{padding:12px;border-radius:9px;margin-top:12px;background:#dbeafe}
+.good{background:#dcfce7;color:#166534}.bad{background:#fee2e2;color:#991b1b}
+button{border:0;border-radius:9px;padding:12px 16px;font-weight:bold;font-size:15px;cursor:pointer}
+.primary{background:#1769aa;color:white}.secondary{background:#e2e8f0;color:#17345e}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:15px}
+.total{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#f8fafc;padding:13px;border-radius:10px;margin-top:14px}
+.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;margin-top:12px;min-width:480px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid #dbeafe}th{background:#eff6ff}
+footer{text-align:center;color:#64748b;padding:15px}
+@media(max-width:650px){.grid,.budgets{grid-template-columns:1fr}.card{padding:17px}}
+@media print{.no-print,button{display:none!important}body{background:white}.card{box-shadow:none;border:1px solid #ddd}}
+</style>
+</head>
+<body>
+<header>
+<h1>Student Budget Planner</h1>
+<p>Plan your money. Track your spending. Build better habits.</p>
+</header>
+<main>
+<form id="planner">
+<section class="card">
+<h2>1. Student Information</h2>
+<div class="grid">
+<div><label for="student">Full Name *</label><input id="student" required maxlength="100" placeholder="Enter your name"></div>
+<div><label for="section">Grade and Section *</label><input id="section" required maxlength="80" placeholder="e.g. Grade 12 - ABM"></div>
+</div>
+</section>
+
+<section class="card">
+<h2>2. My Available Money</h2>
+<label for="income">Total Available Money (₱) *</label>
+<input id="income" type="number" min="0" step="0.01" required placeholder="Enter your money">
+</section>
+
+<section class="card">
+<h2>3. My Budget Allocation</h2>
+<p>Choose your own percentages. The peso amounts will update automatically.</p>
+<div class="budgets">
+<div class="budget needs">
+<h3>🔴 Needs</h3><p class="small">Meals, transport, school supplies and projects.</p>
+<label for="needs">Percentage (%)</label><input id="needs" type="number" min="0" max="100" value="50" required>
+<div class="small">Allocated amount</div><div class="amount" id="needsMoney">₱0.00</div>
+</div>
+<div class="budget savings">
+<h3>🟢 Savings</h3><p class="small">Emergencies and future goals.</p>
+<label for="savings">Percentage (%)</label><input id="savings" type="number" min="0" max="100" value="30" required>
+<div class="small">Allocated amount</div><div class="amount" id="savingsMoney">₱0.00</div>
+</div>
+<div class="budget">
+<h3>🔵 Wants</h3><p class="small">Entertainment, shopping and hangouts.</p>
+<label for="wants">Percentage (%)</label><input id="wants" type="number" min="0" max="100" value="20" required>
+<div class="small">Allocated amount</div><div class="amount" id="wantsMoney">₱0.00</div>
+</div>
+</div>
+<div class="total"><span>Total percentage: <b id="percentTotal">100%</b></span><span>Remaining after expenses: <b id="remaining">₱0.00</b></span></div>
+<div id="allocationStatus" class="status good">Your percentages add up to 100%.</div>
+</section>
+
+<section class="card">
+<h2>4. Expense Tracker</h2>
+<p class="small">Record your expenses and select the category.</p>
+<div class="grid">
+<div><label for="date">Date</label><input id="date" type="date"></div>
+<div><label for="category">Category</label><select id="category"><option>Needs</option><option>Savings</option><option>Wants</option></select></div>
+</div>
+<label for="item">Item / Description</label><input id="item" placeholder="e.g. Transportation fare">
+<label for="expense">Amount (₱)</label><input id="expense" type="number" min="0.01" step="0.01" placeholder="Enter amount">
+<div class="actions no-print"><button type="button" class="primary" id="add">Add Expense</button><button type="button" class="secondary" id="clear">Clear Expenses</button></div>
+<div class="tablewrap"><table><thead><tr><th>Date</th><th>Item</th><th>Category</th><th>Amount</th><th class="no-print">Action</th></tr></thead><tbody id="rows"><tr><td colspan="5">No expenses recorded yet.</td></tr></tbody></table></div>
+<div class="total"><span>Total expenses: <b id="spent">₱0.00</b></span><span>Money remaining: <b id="balance">₱0.00</b></span></div>
+</section>
+
+<section class="card">
+<h2>5. Summary and Reflection</h2>
+<label for="followed">Did you follow your budget plan?</label>
+<select id="followed"><option value="">Choose an answer</option><option>Yes</option><option>Partly</option><option>No</option></select>
+<label for="reflection">What did you learn about managing money? *</label>
+<textarea id="reflection" required maxlength="1500" placeholder="Write your reflection here..."></textarea>
+</section>
+
+<section class="card">
+<h2>6. Submit Your Answers</h2>
+<p>Your activity can be printed now. Online collection will work after the organizer connects the website to Google Sheets.</p>
+<div id="message" class="status" hidden></div>
+<div class="actions no-print">
+<button class="primary" type="submit">Submit Answers</button>
+<button class="secondary" type="button" id="print">Print / Save as PDF</button>
+<button class="secondary" type="reset">Reset Activity</button>
+</div>
+</section>
+</form>
+</main>
+<footer>Student Budget Planner</footer>
+<script>
+const $=id=>document.getElementById(id);
+const money=n=>new Intl.NumberFormat("en-PH",{style:"currency",currency:"PHP"}).format(n||0);
+let expenses=[];
+$("date").value=new Date().toISOString().slice(0,10);
+
+function val(id){return Math.max(0,Number($(id).value)||0)}
+function update(){
+ const income=val("income"),n=val("needs"),s=val("savings"),w=val("wants"),sum=n+s+w;
+ $("needsMoney").textContent=money(income*n/100);
+ $("savingsMoney").textContent=money(income*s/100);
+ $("wantsMoney").textContent=money(income*w/100);
+ $("percentTotal").textContent=sum+"%";
+ const status=$("allocationStatus");
+ if(sum!==100){status.className="status bad";status.textContent=sum<100?"Percentages must add up to 100%. You are "+(100-sum)+"% short.":"Percentages exceed 100% by "+(sum-100)+"%."}
+ else{status.className="status good";status.textContent="Your percentages add up to 100%."}
+ const spent=expenses.reduce((a,e)=>a+e.amount,0);
+ $("spent").textContent=money(spent);
+ $("balance").textContent=money(income-spent);
+ $("remaining").textContent=money(income-spent);
+}
+["income","needs","savings","wants"].forEach(id=>$(id).addEventListener("input",update));
+function render(){
+ const tbody=$("rows");tbody.replaceChildren();
+ if(!expenses.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=5;td.textContent="No expenses recorded yet.";tr.append(td);tbody.append(tr)}
+ expenses.forEach((e,i)=>{
+  const tr=document.createElement("tr");
+  [e.date,e.item,e.category,money(e.amount)].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.append(td)});
+  const td=document.createElement("td");td.className="no-print";const b=document.createElement("button");b.type="button";b.className="secondary";b.textContent="Remove";b.onclick=()=>{expenses.splice(i,1);render()};td.append(b);tr.append(td);tbody.append(tr);
+ });
+ update();
+}
+$("add").onclick=()=>{
+ const item=$("item").value.trim(),amount=Number($("expense").value);
+ if(!item||!Number.isFinite(amount)||amount<=0){alert("Enter an item description and a valid amount.");return}
+ expenses.push({date:$("date").value||new Date().toISOString().slice(0,10),item,category:$("category").value,amount});
+ $("item").value="";$("expense").value="";render();
+};
+$("clear").onclick=()=>{if(confirm("Clear all expenses?")){expenses=[];render()}};
+$("print").onclick=()=>window.print();
+$("planner").addEventListener("reset",()=>setTimeout(()=>{expenses=[];$("date").value=new Date().toISOString().slice(0,10);render();$("message").hidden=true},0));
+$("planner").addEventListener("submit",e=>{
+ e.preventDefault();update();
+ if(val("needs")+val("savings")+val("wants")!==100){alert("Needs, Savings, and Wants must add up to exactly 100%.");return}
+ const msg=$("message");msg.hidden=false;msg.className="status";
+ msg.textContent="Your answers are ready, but online submission has not been connected yet. Use Print / Save as PDF for now. The organizer must connect Google Sheets before submissions can appear on their laptop.";
+ msg.scrollIntoView({behavior:"smooth",block:"center"});
+});
+update();
+</script>
+</body>
+</html>
